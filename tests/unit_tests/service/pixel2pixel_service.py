@@ -1,10 +1,8 @@
 import mxnet as mx
 import numpy as np
-from mxnet_model_service import MXNetBaseService, check_input_shape
-from utils.mxnet_utils import Image
-from mxnet import gluon
+from mms.model_service.mxnet_model_service import MXNetBaseService, check_input_shape
+from mms.utils.mxnet import image
 from mxnet import ndarray as nd
-from mxnet.gluon import nn, utils
 from mxnet.gluon.nn import Dense, Activation, Conv2D, Conv2DTranspose, \
     BatchNorm, LeakyReLU, Flatten, HybridSequential, HybridBlock, Dropout
 
@@ -87,10 +85,10 @@ class Pixel2pixelService(MXNetBaseService):
     def _preprocess(self, data):
         input_shape = self.signature['inputs'][0]['data_shape']
         height, width = input_shape[2:]
-        img_arr = Image.read(data[0])
-        img_arr = Image.resize(img_arr, width, height)
-        img_arr = Image.color_normalize(img_arr, nd.array([127.5]), nd.array([127.5]))
-        img_arr = Image.transform_shape(img_arr)
+        img_arr = image.read(data[0])
+        img_arr = image.resize(img_arr, width, height)
+        img_arr = image.color_normalize(img_arr, nd.array([127.5]), nd.array([127.5]))
+        img_arr = image.transform_shape(img_arr)
         return [img_arr]
 
     def _inference(self, data):
@@ -98,8 +96,8 @@ class Pixel2pixelService(MXNetBaseService):
         return self.mx_model(*data)
 
     def _postprocess(self, data):
-        img_arr = ((data[0] + 1.0) * 127.5).astype(np.uint8)
-        return [Image.write(img_arr)]
+        img_arr = ((data[0] + 1.0) * 127.5)
+        return [image.write(img_arr)]
 
 
 

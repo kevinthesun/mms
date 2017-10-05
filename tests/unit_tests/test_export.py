@@ -1,12 +1,8 @@
-import sys
-sys.path.append('../..')
-
 import unittest
-import mock
 import mxnet as mx
 import os
 import json
-from mxnet_vision_service import MXNetVisionService as mx_vision_service
+from mms.model_service.mxnet_vision_service import MXNetVisionService as mx_vision_service
 
 
 class TestExport(unittest.TestCase):

@@ -1,13 +1,11 @@
 import os
-import sys
 import json
-sys.path.append('../..')
-
+import PIL
 import unittest
-import mock
+import numpy as np
 import mxnet as mx
-from mxnet_vision_service import MXNetVisionService as mx_vision_service
-from utils.mxnet_utils import Image
+from io import BytesIO
+from mms.model_service.mxnet_vision_service import MXNetVisionService as mx_vision_service
 from service.pixel2pixel_service import UnetGenerator, Pixel2pixelService
 
 class TestService(unittest.TestCase):
@@ -48,6 +46,14 @@ class TestService(unittest.TestCase):
                 synset.write('test label %d\n' % (i))
         mod.export_serving('test', 0, signature, use_synset=True)
 
+    def _write_image(self, img_arr):
+        img_arr = mx.nd.transpose(img_arr, (1, 2, 0)).astype(np.uint8).asnumpy()
+        mode = 'RGB'
+        image = PIL.Image.fromarray(img_arr, mode)
+        output = BytesIO()
+        image.save(output, format='jpeg')
+        return output.getvalue()
+
     def test_vision_init(self):
         self._train_and_export()
         model_path = 'test.zip'
@@ -63,8 +69,8 @@ class TestService(unittest.TestCase):
         # Test same size image inputs
         data1 = mx.nd.random_uniform(0, 255, shape=(3, 64, 64))
         data2 = mx.nd.random_uniform(0, 255, shape=(3, 32, 32))
-        img_buf1 = Image.write(data1)
-        img_buf2 = Image.write(data2)
+        img_buf1 = self._write_image(data1)
+        img_buf2 = self._write_image(data2)
 
         output = service.inference([img_buf1, img_buf2])
         assert len(output[0]) == 5
@@ -72,8 +78,8 @@ class TestService(unittest.TestCase):
         # test different size image inputs
         data1 = mx.nd.random_uniform(0, 255, shape=(3, 96, 96))
         data2 = mx.nd.random_uniform(0, 255, shape=(3, 24, 24))
-        img_buf1 = Image.write(data1)
-        img_buf2 = Image.write(data2)
+        img_buf1 = self._write_image(data1)
+        img_buf2 = self._write_image(data2)
 
         output = service.inference([img_buf1, img_buf2])
         assert len(output[0]) == 5
@@ -115,12 +121,11 @@ class TestService(unittest.TestCase):
         cmd = 'python ../../export_model.py --model %s=%s --signature %s ' \
               '--export-path %s' % (model_name, model_path,
                                     signature, export_path)
-        #os.remove('gluon/signature.json')
         os.system(cmd)
 
         service = Pixel2pixelService('gluon.zip')
         data = mx.nd.random_uniform(0, 255, shape=(3, 256, 256))
-        img_buf = Image.write(data)
+        img_buf = self._write_image(data)
         service.inference([img_buf])
 
     def runTest(self):
