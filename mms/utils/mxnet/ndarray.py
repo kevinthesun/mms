@@ -1,12 +1,14 @@
 import mxnet as mx
 
 def top_probability(data, labels, top=5):
-    """Get top probability prediction from NDArray
+    """Get top probability prediction from NDArray.
 
     Parameters
     ----------
-    src : NDArray
-        NDArray to be predicted
+    data : NDArray
+        Data to be predicted
+    labels : List
+        List of class labels
 
     Returns
     -------

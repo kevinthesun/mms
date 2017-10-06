@@ -5,8 +5,6 @@ import mxnet as mx
 import mms.utils.mxnet.image as image
 from io import BytesIO
 
-
-
 class TestMXNetImageUtils(unittest.TestCase):
     def _write_image(self, img_arr, flag=1):
         img_arr = mx.nd.transpose(img_arr, (1, 2, 0))
