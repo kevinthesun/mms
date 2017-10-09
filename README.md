@@ -23,10 +23,10 @@ mxnet-model-server --models resnet-18=https://s3.amazonaws.com/mms-models/resnet
 
 ### Export existing model to serving model format
 ```python
-mxnet-model-export --model resnet-18=models/resnet-18.model --signature signature.json --synset synset.txt --export-path models
+mxnet-model-export --model resnet-18=models/resnet-18 --signature signature.json --synset synset.txt --export-path models
 ```
 #### Arguments:
-1. model: required, <model_name>=<model_path> pair. Model path is the path to pre-trained model file.
+1. model: required, <model_name>=<model_path> pair. Model path is the pre-trained model file directory.
 2. signature: required, signature json file for model service.
    Currently 4 entries are required: 
 
@@ -73,6 +73,25 @@ mxnet-model-export --model resnet-18=models/resnet-18.model --signature signatur
 
       ...
    ```
+   If `synset.txt` is inclued in exported archive file and each line represents a category, `MXNetBaseModel`
+   will load this file and create `labels` attribute automatically. If this file is named differently or
+   has a different format, you need to override `__init__' method and manually load it.
+
+### Directly export model after training in MXNet
+
+Another method to export model is to use `export_serving` function while completing training:
+```python
+   import mxnet as mx
+   from mms.export_model import export_serving
+
+   mod = mx.mod.Module(...)
+   # Training process
+   ...
+
+   # Export model
+   signature = { "input_type": "image/jpeg", "output_type": "application/json" }
+   export_serving(mod, 'resnet-18', signature, util_files=['synset.txt'])
+```
 
 ## Endpoints:
 After local server is up, there will be three built-in endpoints:
@@ -288,6 +307,4 @@ They are tested and can be deployed through [Amazon ECS](https://aws.amazon.com/
 To be updated
 
 ## Testing:
-python -m unittest tests/unit_tests/test_serving_frontend
-python -m unittest tests/unit_tests/test_export
-python -m unittest tests/unit_tests/test_service
+python -m pytest tests/unit_tests/
